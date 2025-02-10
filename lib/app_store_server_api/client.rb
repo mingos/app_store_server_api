@@ -26,7 +26,7 @@ module AppStoreServerApi
     # @param bundle_id [String] Your app’s bundle ID (Ex: “com.example.testbundleid”)
     # @param environment [Symbol] :production or :sandbox
     def initialize(private_key:, key_id:, issuer_id:, bundle_id:, environment: :production)
-      self.environment = environment
+      self.environment = environment.to_sym
       @issuer_id = issuer_id
       @key_id = key_id
       @private_key = private_key
