@@ -7,7 +7,7 @@ the [App Store Server API](https://developer.apple.com/documentation/appstoreser
 
 ## Support API Endpoints
 
-* [Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions)
+* [Get Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions-_transactionid_)
 
 ## Requirements
 
@@ -36,7 +36,7 @@ To get started, you must obtain the following:
 **In your Rails application, create a client configure**
 
 ```yaml
-# my_app/config/app_store_server_api.yml
+# my_app/config/app_store_server.yml
 default: &default
   private_key: |
     -----BEGIN PRIVATE KEY-----
@@ -60,22 +60,35 @@ production:
 ### load the configuration
 
 ```ruby
-client = AppStoreServerApi::Client.new(**Rails.configuration.app_store_server_api)
-
-# change environment 
-client.environment = :production # or :sandbox
+config = Rails.application.config_for(:app_store_server)
+client = AppStoreServerApi::Client.new(**config)
 ```
 
-## Development
+## API
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run
-the tests. You can also run `bin/console` for an interactive prompt that will allow you to
-experiment.
+### Get Transaction Info
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new
-version, update the version number in `version.rb`, and then run `bundle exec rake release`, which
-will create a git tag for the version, push git commits and the created tag, and push the `.gem`
-file to [rubygems.org](https://rubygems.org).
+[Get Transaction Info](
+https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions-_transactionid_)
+
+Get information about a single transaction for your app.
+
+```ruby
+transaction_id = '2000000847061981'
+client.get_transaction_info(transaction_id)
+=>
+{
+  "transactionId" => "2000000847061981",
+  "originalTransactionId" => "2000000847061981",
+  "bundleId" => "com.myapp.app",
+  "productId" => "com.myapp.app.product",
+  "type" => "Consumable",
+  "purchaseDate" => 1738645560000,
+  "originalPurchaseDate" => 1738645560000,
+  "quantity" => 1,
+  ...
+}
+```
 
 ## License
 
