@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.name = "app_store_server_api"
   spec.version = AppStoreServerApi::VERSION
   spec.authors = ["mingos"]
-  spec.email = ["mingos@example.com"]
+  spec.email = ["mingos@pumb.jp"]
 
   spec.summary = "App Store Server API"
   spec.description = "Ruby Client for App Store Server API"
