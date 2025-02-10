@@ -50,12 +50,39 @@ module AppStoreServerApi
     # @return [Hash] transaction info
     def get_transaction_info(transaction_id)
       path = "/inApps/v1/transactions/#{transaction_id}"
-      response = do_get(path)
+      response = do_request(path)
 
       if response.success?
         json = JSON.parse(response.body)
         payload, = Utils::Decoder.decode_jws!(json['signedTransactionInfo'])
         payload
+      else
+        raise Error.parse_response(response)
+      end
+    end
+
+    # Request a Test Notification
+    # @see https://developer.apple.com/documentation/appstoreserverapi/post-v1-notifications-test
+    # @return [Hash] notification info
+    def request_test_notification
+      path = '/inApps/v1/notifications/test'
+      response = do_request(path, method: :post)
+
+      if response.success?
+        JSON.parse(response.body)
+      else
+        raise Error.parse_response(response)
+      end
+    end
+
+    # Get Test Notification Status
+    # @see https://developer.apple.com/documentation/appstoreserverapi/get-v1-notifications-test-_testnotificationtoken_
+    def get_test_notification_status(test_notification_token)
+      path = "/inApps/v1/notifications/test/#{test_notification_token}"
+      response = do_request(path)
+
+      if response.success?
+        JSON.parse(response.body)
       else
         raise Error.parse_response(response)
       end
@@ -101,10 +128,11 @@ module AppStoreServerApi
 
     # send get request to App Store Server API
     # @param [String] path request path (ex: '/inApps/v1/transactions/2000000847061981')
+    # @param [Symbol] method request method
     # @param [Hash] params request params
     # @param [Hash] headers additional headers
     # @return [Faraday::Response] response
-    def do_get(path, params: {}, headers: {}, open_timeout: 10, read_timeout: 30)
+    def do_request(path, method: :get, params: {}, headers: {}, open_timeout: 10, read_timeout: 30)
       request_url = api_base_url + path
       bearer_token = generate_bearer_token
       request_headers = base_request_headers(bearer_token).merge(headers)
@@ -116,7 +144,14 @@ module AppStoreServerApi
         end
       end
 
-      conn.get(request_url, params, request_headers)
+      case method
+      when :get
+        conn.get(request_url, params, request_headers)
+      when :post
+        conn.post(request_url, params.to_json, request_headers)
+      else
+        raise ArgumentError, 'method must be :get or :post'
+      end
     end
 
   end

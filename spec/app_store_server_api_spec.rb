@@ -1,6 +1,19 @@
 # frozen_string_literal: true
 #== run command
 # bundle exec rspec spec/app_store_server_api_spec.rb
+#
+#== set environment variable
+# You need to set values for the environment variables to pass the tests.
+# Here is an example using bash.
+# The values are just samples and will not work as is.
+#
+# ```bash
+# export issuer_id="13b5ef32-1a08-35a2-e148-5b8c7c11a4d1"
+# export key_id="3KB13592P3"
+# export private_key=$'-----BEGIN PRIVATE KEY-----\n......\n-----END PRIVATE KEY-----'
+# export bundle_id='com.myapp.app'
+# export transaction_id='2000000151031281'
+# ```
 RSpec.describe AppStoreServerApi do
   it 'has a version number' do
     expect(AppStoreServerApi::VERSION).not_to be nil
@@ -52,6 +65,58 @@ RSpec.describe AppStoreServerApi do
         expect(transaction_info).to be_a Hash
         expect(transaction_info['transactionId']).to eq transaction_id
         expect(transaction_info['bundleId']).to eq client.bundle_id
+      end
+
+    end
+
+    describe '#request_test_notification' do
+
+      it 'request a test notification' do
+        # response example:
+        # {"testNotificationToken"=>"9f90efb9-2f75-4dbe-990c-5d1fc89f4546_1739179413123"}
+        result = client.request_test_notification
+        expect(result).to be_a Hash
+        expect(result.has_key?('testNotificationToken')).to be true
+      end
+
+    end
+
+    describe '#get_test_notification_status' do
+
+      it 'get test notification status' do
+        # request test a notification
+        test_notification_token = client.request_test_notification['testNotificationToken']
+
+        # get test notification status
+        # response example:
+        # {
+        #   "signedPayload"=> "eyJhbGciOiJFUzI1NiIsIng1YyI6...",
+        #   "firstSendAttemptResult"=>"SUCCESS",
+        #   "sendAttempts"=>[{"attemptDate"=>1739179888814, "sendAttemptResult"=>"SUCCESS"}]
+        # }
+        result = client.get_test_notification_status(test_notification_token)
+
+        expect(result.has_key?('signedPayload')).to be true
+        expect(result.has_key?('sendAttempts')).to be true
+
+        payload = AppStoreServerApi::Utils::Decoder.decode_jws!(result['signedPayload'])
+
+        token_uuid = test_notification_token.split('_', 2).first
+
+        # payload example:
+        # {
+        #   "notificationType"=>"TEST",
+        #   "notificationUUID"=>"3838df56-31ab-4e2e-9535-e6e9377c4c77",
+        #   "data"=>{"bundleId"=>"com.myapp.app", "environment"=>"Sandbox"},
+        #   "version"=>"2.0",
+        #   "signedDate"=>1739180480080
+        # }
+        expect(payload['notificationType']).to eq 'TEST'
+        expect(payload['notificationUUID']).to eq token_uuid
+        expect(payload['data']['bundleId']).to eq client.bundle_id
+        expect(payload['data']['environment']).to eq 'Sandbox'
+        expect(payload['version']).to eq '2.0'
+        expect(payload['signedDate']).to be_a Integer # Unixtimemillis
       end
 
     end

@@ -8,6 +8,8 @@ the [App Store Server API](https://developer.apple.com/documentation/appstoreser
 ## Support API Endpoints
 
 * [Get Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions-_transactionid_)
+* [Request a Test Notification](https://developer.apple.com/documentation/appstoreserverapi/post-v1-notifications-test)
+* [Get Test Notification Status](https://developer.apple.com/documentation/appstoreserverapi/get-v1-notifications-test-_testnotificationtoken_)
 
 ## Requirements
 
@@ -89,6 +91,42 @@ client.get_transaction_info(transaction_id)
   ...
 }
 ```
+
+### Request a Test Notification
+
+[Request a Test Notification](https://developer.apple.com/documentation/appstoreserverapi/post-v1-notifications-test)
+
+Ask App Store Server Notifications to send a test notification to your server.
+
+```ruby
+result = client.request_test_notification
+#=> {"testNotificationToken"=>"9f90efb9-2f75-4dbe-990c-5d1fc89f4546_1739179413123"}
+```
+### Get Test Notification Status
+
+[Get Test Notification Status](https://developer.apple.com/documentation/appstoreserverapi/get-v1-notifications-test-_testnotificationtoken_)
+
+Check the status of the test App Store server notification sent to your server.
+
+```ruby
+test_notification_token = client.request_test_notification['testNotificationToken']
+result = client.get_test_notification_status(test_notification_token)
+#=> {
+#  "signedPayload"=> "eyJhbGciOiJFUzI1NiIsIng1YyI6...",
+#  "firstSendAttemptResult"=>"SUCCESS",
+#  "sendAttempts"=>[{"attemptDate"=>1739179888814, "sendAttemptResult"=>"SUCCESS"}]
+#}
+
+signed_payload = AppStoreServerApi::Utils::Decoder.decode_jws!(result['signedPayload'])
+# => {
+#   "notificationType"=>"TEST",
+#   "notificationUUID"=>"3838df56-31ab-4e2e-9535-e6e9377c4c77",
+#   "data"=>{"bundleId"=>"com.myapp.app", "environment"=>"Sandbox"},
+#   "version"=>"2.0",
+#   "signedDate"=>1739180480080
+# }
+```
+
 
 ## License
 
