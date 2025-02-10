@@ -5,6 +5,10 @@ the [App Store Server API](https://developer.apple.com/documentation/appstoreser
 
 [![Gem Version](https://badge.fury.io/rb/app_store_server_api.svg)](https://badge.fury.io/rb/app_store_server_api)
 
+## Support API Endpoints
+
+* [Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions)
+
 ## Requirements
 
 Ruby 3.0.0 or later.
@@ -26,6 +30,41 @@ To get started, you must obtain the following:
 - An [API key](https://developer.apple.com/documentation/appstoreserverapi/creating-api-keys-to-authorize-api-requests)
 - The ID of the key
 - Your [issuer ID](https://developer.apple.com/documentation/appstoreserverapi/generating_tokens_for_api_requests)
+
+### Configure
+
+**In your Rails application, create a client configure**
+
+```yaml
+# my_app/config/app_store_server_api.yml
+default: &default
+  private_key: |
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----
+  key_id: Z1BT391B21
+  issuer_id: ef02153z-1290-3519-875e-237a15237e3c
+  bundle_id: com.myapp.app
+  environment: sandbox
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+```
+
+### load the configuration
+
+```ruby
+client = AppStoreServerApi::Client.new(**Rails.configuration.app_store_server_api)
+
+# change environment 
+client.environment = :production # or :sandbox
+```
 
 ## Development
 

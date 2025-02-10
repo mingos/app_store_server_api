@@ -13,6 +13,7 @@ module AppStoreServerApi
     PAYLOAD_AUD = 'appstoreconnect-v1'
     TOKEN_TYPE = 'JWT'
     ENCODE_ALGORITHM = 'ES256'
+    ENVIRONMENTS = [:production, :sandbox].freeze
     API_BASE_URLS = {
       :production => 'https://api.storekit.itunes.apple.com',
       :sandbox => 'https://api.storekit-sandbox.itunes.apple.com'
@@ -25,15 +26,22 @@ module AppStoreServerApi
     # @param bundle_id [String] Your app’s bundle ID (Ex: “com.example.testbundleid”)
     # @param environment [Symbol] :production or :sandbox
     def initialize(private_key:, key_id:, issuer_id:, bundle_id:, environment: :production)
-      unless [:production, :sandbox].include?(environment)
-        raise ArgumentError, 'environment must be :production or :sandbox'
-      end
-
-      @environment = environment
+      self.environment = environment
       @issuer_id = issuer_id
       @key_id = key_id
       @private_key = private_key
       @bundle_id = bundle_id
+    end
+
+    # set environment
+    # @param env [Symbol] :production or :sandbox
+    # @raise [ArgumentError] if env is not :production or :sandbox
+    def environment=(env)
+      unless ENVIRONMENTS.include?(env)
+        raise ArgumentError, 'environment must be :production or :sandbox'
+      end
+
+      @environment = env
     end
 
     # get information about a single transaction
