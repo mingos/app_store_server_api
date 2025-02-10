@@ -43,6 +43,19 @@ RSpec.describe AppStoreServerApi do
 
     end
 
+    describe '#get_transaction_info' do
+
+      let(:transaction_id) {ENV['transaction_id']}
+
+      it 'get information about a single transaction' do
+        transaction_info = client.get_transaction_info(transaction_id)
+        expect(transaction_info).to be_a Hash
+        expect(transaction_info['transactionId']).to eq transaction_id
+        expect(transaction_info['bundleId']).to eq client.bundle_id
+      end
+
+    end
+
   end
 
   # Utils::Decoder

@@ -13,6 +13,10 @@ module AppStoreServerApi
     PAYLOAD_AUD = 'appstoreconnect-v1'
     TOKEN_TYPE = 'JWT'
     ENCODE_ALGORITHM = 'ES256'
+    API_BASE_URLS = {
+      :production => 'https://api.storekit.itunes.apple.com',
+      :sandbox => 'https://api.storekit-sandbox.itunes.apple.com'
+    }.freeze
 
     # initialize client
     # @param private_key [String] p8 key
@@ -30,6 +34,23 @@ module AppStoreServerApi
       @key_id = key_id
       @private_key = private_key
       @bundle_id = bundle_id
+    end
+
+    # get information about a single transaction
+    # @see https://developer.apple.com/documentation/appstoreserverapi/get-v1-transactions-_transactionid_
+    # @param [String] transaction_id The identifier of a transaction
+    # @return [Hash] transaction info
+    def get_transaction_info(transaction_id)
+      path = "/inApps/v1/transactions/#{transaction_id}"
+      response = do_get(path)
+
+      if response.success?
+        json = JSON.parse(response.body)
+        payload, = Utils::Decoder.decode_jws!(json['signedTransactionInfo'])
+        payload
+      else
+        raise Error.parse_response(response)
+      end
     end
 
     # generate bearer token
@@ -57,6 +78,37 @@ module AppStoreServerApi
       }
 
       JWT.encode(payload, OpenSSL::PKey::EC.new(private_key), ENCODE_ALGORITHM, headers)
+    end
+
+    def api_base_url
+      API_BASE_URLS[environment]
+    end
+
+    def base_request_headers(bearer_token)
+      {
+        'Content-Type' => 'application/json',
+        'Authorization' => "Bearer #{bearer_token}"
+      }
+    end
+
+    # send get request to App Store Server API
+    # @param [String] path request path (ex: '/inApps/v1/transactions/2000000847061981')
+    # @param [Hash] params request params
+    # @param [Hash] headers additional headers
+    # @return [Faraday::Response] response
+    def do_get(path, params: {}, headers: {}, open_timeout: 10, read_timeout: 30)
+      request_url = api_base_url + path
+      bearer_token = generate_bearer_token
+      request_headers = base_request_headers(bearer_token).merge(headers)
+
+      conn = Faraday.new do |f|
+        f.adapter :net_http do |http|
+          http.open_timeout = 10
+          http.read_timeout = 30
+        end
+      end
+
+      conn.get(request_url, params, request_headers)
     end
 
   end
