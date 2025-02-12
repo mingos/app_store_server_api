@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require "jwt"
+require 'jwt'
 require 'faraday'
-require "uri"
-require "json"
-require "openssl"
+require 'uri'
+require 'json'
+require 'openssl'
 
 module AppStoreServerApi
 
@@ -51,14 +51,9 @@ module AppStoreServerApi
     def get_transaction_info(transaction_id)
       path = "/inApps/v1/transactions/#{transaction_id}"
       response = do_request(path)
-
-      if response.success?
-        json = JSON.parse(response.body)
-        payload, = Utils::Decoder.decode_jws!(json['signedTransactionInfo'])
-        payload
-      else
-        raise Error.parse_response(response)
-      end
+      json = JSON.parse(response.body)
+      payload, = Utils::Decoder.decode_jws!(json['signedTransactionInfo'])
+      payload
     end
 
     # Request a Test Notification
@@ -67,12 +62,7 @@ module AppStoreServerApi
     def request_test_notification
       path = '/inApps/v1/notifications/test'
       response = do_request(path, method: :post)
-
-      if response.success?
-        JSON.parse(response.body)
-      else
-        raise Error.parse_response(response)
-      end
+      JSON.parse(response.body)
     end
 
     # Get Test Notification Status
@@ -80,12 +70,7 @@ module AppStoreServerApi
     def get_test_notification_status(test_notification_token)
       path = "/inApps/v1/notifications/test/#{test_notification_token}"
       response = do_request(path)
-
-      if response.success?
-        JSON.parse(response.body)
-      else
-        raise Error.parse_response(response)
-      end
+      JSON.parse(response.body)
     end
 
     # generate bearer token
